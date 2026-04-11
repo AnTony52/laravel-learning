@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 
 class TaskController extends Controller
 {
@@ -41,7 +43,7 @@ class TaskController extends Controller
             if (!in_array($direction, ['asc', 'desc'])) { // kiểm tra nếu giá trị của tham số 'order' không phải là 'asc' hoặc 'desc'
                 $direction = 'desc'; // nếu không hợp lệ, mặc định sử dụng 'desc'
             }
-            $query->orderBy($request->sort_by, $direction); // thêm điều kiện sắp xếp theo trường được chỉ định và hướng sắp xếp đã xác định (m
+            $query->orderBy($request->sort_by, $direction); // thêm điều kiện sắp xếp theo trường được chỉ định và hướng sắp xếp đã xác định 
 
         } else {
             $query->latest(); // nếu không có tham số 'sort_by' hoặc giá trị của nó không hợp lệ, sắp xếp theo trường 'created_at' theo thứ tự giảm dần (mới nhất trước)
@@ -63,20 +65,27 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
         //
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|string|in:todo,in_progress,done',
-            'priority' => 'required|string|in:low,medium,hight',
-            'due_date' => 'nullable|date',
-        ]);
-        $task = Task::create($data); // tạo một task mới với dữ liệu đã được xác thực và lưu vào cơ sở dữ liệu
-        return response()->json($task, 201);
-
+        $data = $request->validated(); // lấy dữ liệu đã được xác thực từ StoreTaskRequest
+        $task = Task::create($data); // tạo một task mới với dữ kiệu đã được xác thực và lưu vào cơ sở dữ liệu
+        return response()->json($task, 201); // trả về task đã được tạo dưới dạng Json với mã trạng thái HTTP 201 (Created)
     }
+    // public function store(Request $request)
+    // {
+    //     //
+    //     $data = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'description' => 'required|string',
+    //         'status' => 'required|string|in:todo,in_progress,done',
+    //         'priority' => 'required|string|in:low,medium,high',
+    //         'due_date' => 'nullable|date',
+    //     ]);
+    //     $task = Task::create($data); // tạo một task mới với dữ liệu đã được xác thực và lưu vào cơ sở dữ liệu
+    //     return response()->json($task, 201);
+
+    // }
 
     /**
      * Display the specified resource.
@@ -98,19 +107,26 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
         //
-        $data = $request->validate([ // sử dụng 'sometimes' để cho phép cập nhật một số trường mà không cần phải cung cấp tất cả
-            'title' => 'sometimes|required|string|max:255', // nếu trường 'title' được cung cấp thì nó phải là một chuỗi và có độ dài tối đa 255 ký tự
-            'description' => 'sometimes|required|string', // nếu trường 'description' được cung cấp thì nó phải là một chuỗi
-            'status' => 'sometimes|required|string|in:todo,in_progress,done', // nếu trường 'status' được cung cấp thì nó phải là một chuỗi và có giá trị là 'todo', 'in_progress', hoặc 'done'
-            'priority' => 'sometimes|required|string|in:low,medium,high', // nếu trường 'priority' được cung cấp thì nó phải là một chuỗi và có giá trị là 'low', 'medium', hoặc 'high'
-            'due_date' => 'nullable|date', // trường 'due_date' có thể null hoặc phải là một ngày hợp lệ
-        ]);
+        $data = $request->validated(); // lấy dữ liệu đã được xác thực từ UpdateTaskRequest
         $task->update($data); // cập nhật task với dữ liệu đã được xác thực
         return response()->json($task); // trả về task đã được cập nhật dưới dạng JSON
     }
+    // public function update(Request $request, Task $task)
+    // {
+    //     //
+    //     $data = $request->validate([ // sử dụng 'sometimes' để cho phép cập nhật một số trường mà không cần phải cung cấp tất cả
+    //         'title' => 'sometimes|required|string|max:255', // nếu trường 'title' được cung cấp thì nó phải là một chuỗi và có độ dài tối đa 255 ký tự
+    //         'description' => 'sometimes|required|string', // nếu trường 'description' được cung cấp thì nó phải là một chuỗi
+    //         'status' => 'sometimes|required|string|in:todo,in_progress,done', // nếu trường 'status' được cung cấp thì nó phải là một chuỗi và có giá trị là 'todo', 'in_progress', hoặc 'done'
+    //         'priority' => 'sometimes|required|string|in:low,medium,high', // nếu trường 'priority' được cung cấp thì nó phải là một chuỗi và có giá trị là 'low', 'medium', hoặc 'high'
+    //         'due_date' => 'nullable|date', // trường 'due_date' có thể null hoặc phải là một ngày hợp lệ
+    //     ]);
+    //     $task->update($data); // cập nhật task với dữ liệu đã được xác thực
+    //     return response()->json($task); // trả về task đã được cập nhật dưới dạng JSON
+    // }
 
     /**
      * Remove the specified resource from storage.
