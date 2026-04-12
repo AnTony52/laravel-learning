@@ -7,9 +7,15 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
+use App\Services\TaskService;
 
 class TaskController extends Controller
 {
+    protected TaskService $taskService;
+    public function __construct(TaskService $taskService)
+    {
+        $this->taskService = $taskService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -72,15 +78,18 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {
-        //
-        $data = $request->validated(); // lấy dữ liệu đã được xác thực từ StoreTaskRequest
-        $task = Task::create($data); // tạo một task mới với dữ kiệu đã được xác thực và lưu vào cơ sở dữ liệu
+        // $data = $request->validated(); // lấy dữ liệu đã được xác thực từ StoreTaskRequest
+        // $task = Task::create($data); // tạo một task mới với dữ kiệu đã được xác thực và lưu vào cơ sở dữ liệu
+
+        $task = $this->taskService->create($request->validated()); // sử dụng phương thức create của TaskService để tạo một task mới với dữ liệu đã được xác thực từ StoreTaskRequest và lưu vào cơ sở dữ liệu 
+        
         return (new TaskResource($task))
             ->response()
             ->setStatusCode(201); // trả về một instance của TaskResource, truyền vào task đã được tạo. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response. Đồng thời, thiết lập mã trạng thái HTTP là 201 (Created) để chỉ ra rằng một tài nguyên mới đã được tạo thành công.
 
         // return response()->json($task, 201); // trả về task đã được tạo dưới dạng Json với mã trạng thái HTTP 201 (Created)
     }
+
     // public function store(Request $request)
     // {
     //     //
@@ -119,10 +128,12 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        //
-        $data = $request->validated(); // lấy dữ liệu đã được xác thực từ UpdateTaskRequest
-        $task->update($data); // cập nhật task với dữ liệu đã được xác thực
+        // $data = $request->validated(); // lấy dữ liệu đã được xác thực từ UpdateTaskRequest
+        // $task->update($data); // cập nhật task với dữ liệu đã được xác thực
+
+        $task = $this->taskService->update($task, $request->validated()); // sử dụng phương thức update của TaskService để cập nhật task với dữ liệu đã được xác thực từ UpdateTaskRequest và lưu vào cơ sở dữ liệu.
         return new TaskResource($task); // trả về một instance của TaskResource, truyền vào task đã được cập nhật. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response.
+        
         // return response()->json($task); // trả về task đã được cập nhật dưới dạng JSON
     }
     // public function update(Request $request, Task $task)
@@ -144,8 +155,9 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
-        $task->delete();
+        // $task->delete();
+
+        $this->taskService->delete($task); // sử dụng phương thức delete của TaskService để xóa task khỏi cơ sở dữ liệu
         return response()->json([
             'message' => 'Task deleted successfully'
         ]);
