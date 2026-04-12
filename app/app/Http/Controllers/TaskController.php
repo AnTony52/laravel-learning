@@ -6,6 +6,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
 
 class TaskController extends Controller
 {
@@ -49,9 +50,13 @@ class TaskController extends Controller
             $query->latest(); // nếu không có tham số 'sort_by' hoặc giá trị của nó không hợp lệ, sắp xếp theo trường 'created_at' theo thứ tự giảm dần (mới nhất trước)
         }
 
-        return response()->json(
-            $query->get()
-        );
+        // return response()->json(
+        //     $query->get()
+        // );
+        $task = $query->paginate(10); // phân trang kết quả với 10 mục mỗi trang
+        return TaskResource::collection($task);
+        // return response()->json($task); // trả về kết quả dưới dạng JSON, bao gồm cả thông tin phân trang như tổng số trang, trang hiện tại, và các liên kết phân trang 
+        
     }
 
     /**
@@ -70,7 +75,11 @@ class TaskController extends Controller
         //
         $data = $request->validated(); // lấy dữ liệu đã được xác thực từ StoreTaskRequest
         $task = Task::create($data); // tạo một task mới với dữ kiệu đã được xác thực và lưu vào cơ sở dữ liệu
-        return response()->json($task, 201); // trả về task đã được tạo dưới dạng Json với mã trạng thái HTTP 201 (Created)
+        return (new TaskResource($task))
+            ->response()
+            ->setStatusCode(201); // trả về một instance của TaskResource, truyền vào task đã được tạo. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response. Đồng thời, thiết lập mã trạng thái HTTP là 201 (Created) để chỉ ra rằng một tài nguyên mới đã được tạo thành công.
+
+        // return response()->json($task, 201); // trả về task đã được tạo dưới dạng Json với mã trạng thái HTTP 201 (Created)
     }
     // public function store(Request $request)
     // {
@@ -93,7 +102,8 @@ class TaskController extends Controller
     public function show(Task $task)
     {
         //
-        return response()->json($task);
+        // return response()->json($task);
+        return new TaskResource($task); // trả về một instance của TaskResource, truyền vào task cần hiển thị. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response.
     }
 
     /**
@@ -112,7 +122,8 @@ class TaskController extends Controller
         //
         $data = $request->validated(); // lấy dữ liệu đã được xác thực từ UpdateTaskRequest
         $task->update($data); // cập nhật task với dữ liệu đã được xác thực
-        return response()->json($task); // trả về task đã được cập nhật dưới dạng JSON
+        return new TaskResource($task); // trả về một instance của TaskResource, truyền vào task đã được cập nhật. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response.
+        // return response()->json($task); // trả về task đã được cập nhật dưới dạng JSON
     }
     // public function update(Request $request, Task $task)
     // {
