@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User; // sử dụng mô hình User để tương tác với bảng users trong cơ sở dữ liệu
 
 class AuthController extends Controller
 {
-    //
-
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -36,7 +35,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!auth()->attempt($data)) {
+        if (!auth()->attempt($data)) { 
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
