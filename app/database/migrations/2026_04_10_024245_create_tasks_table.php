@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id(); // primary key
             $table->string('title'); // tiêu đề task
-            $table->text('description')->nullable(); // mô tả chi tiết về task
+            $table->text('description')->nullable(); // mô tả chi tiết về task có thể null nếu không có mô tả
             $table->string('status')->default('todo'); // trạng thái của task (ví dụ: todo, in_progress, done)
             $table->string('priority')->default('medium'); // mức độ ưu tiên: low, medium, high
             $table->date('due_date')->nullable(); // ngày hết hạn, có thể null nếu không có hạn
