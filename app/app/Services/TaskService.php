@@ -8,7 +8,7 @@ class TaskService
 {
     public function create(array $data): Task
     {
-        if (isset($data['status'])) {
+        if (!isset($data['status'])) {
             $data['status'] = 'todo';
         }
 
@@ -20,8 +20,8 @@ class TaskService
 
     public function update(Task $task, array $data): Task
     {
-        if (isset($data['status'])) {
-            $data['title'] = trim($data['titlte']);
+        if (isset($data['title'])) {
+            $data['title'] = trim($data['title']);
         }
 
         $task->update($data);
