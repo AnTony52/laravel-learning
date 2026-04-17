@@ -6,12 +6,13 @@ use App\Models\Task;
 
 class TaskService
 {
-    public function create(array $data): Task
+    public function create(array $data, int $userId): Task
     {
         if (!isset($data['status'])) {
             $data['status'] = 'todo';
         }
 
+        $data['user_id'] = $userId;
         $data['title'] = trim($data['title']);
 
         return Task::create($data);

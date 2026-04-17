@@ -23,7 +23,7 @@ class TaskController extends Controller
     {
         //
         // return response()->json(Task::latest()->get());
-        $query = Task::query(); // tạo một truy vấn mới cho model Task
+        $query = Task::query()->where('user_id', $request->user()->id); // tạo một truy vấn mới cho model Task, chỉ lấy task của user đăng nhập
         //Filter status
         if ($request->filled('status')) { // kiểm tra nếu có tham số 'status' trong yêu cầu và nó không rỗng
             $query->where('status', $request->status); // thêm điều kiện lọc theo trường 'status' với giá trị từ tham số 'status' trong yêu cầu
@@ -81,7 +81,11 @@ class TaskController extends Controller
         // $data = $request->validated(); // lấy dữ liệu đã được xác thực từ StoreTaskRequest
         // $task = Task::create($data); // tạo một task mới với dữ kiệu đã được xác thực và lưu vào cơ sở dữ liệu
 
-        $task = $this->taskService->create($request->validated()); // sử dụng phương thức create của TaskService để tạo một task mới với dữ liệu đã được xác thực từ StoreTaskRequest và lưu vào cơ sở dữ liệu 
+        $task = $this->taskService->create(
+            $request->validated(),
+            $request->user()->id
+            ); // sử dụng phương thức create của TaskService để tạo một task mới với dữ liệu đã được xác thực từ StoreTaskRequest 
+            // và lưu vào cơ sở dữ liệu. Tạo task mới và gán user hiện tại.
         
         return (new TaskResource($task))
             ->response()
@@ -108,10 +112,11 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Task $task)
+    public function show(Request $request, Task $task)
     {
         //
         // return response()->json($task);
+        $this->authorizeTaskOwnership($request, $task);
         return new TaskResource($task); // trả về một instance của TaskResource, truyền vào task cần hiển thị. TaskResource sẽ định dạng dữ liệu của task theo cách mà bạn đã định nghĩa trong phương thức toArray() của nó và trả về dưới dạng JSON khi được trả về trong response.
     }
 
@@ -153,13 +158,22 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
         // $task->delete();
-
+        $this->authorizeTaskOwnership($request, $task);
         $this->taskService->delete($task); // sử dụng phương thức delete của TaskService để xóa task khỏi cơ sở dữ liệu
         return response()->json([
             'message' => 'Task deleted successfully'
         ]);
+    }
+
+    private function authorizeTaskOwnership(Request $request, Task $task):void {
+        $ownedTask = $request->user()
+            ->tasks()
+            ->whereKey($task->id)
+            ->exists();
+
+        abort_unless($ownedTask, 403, 'You do not have permission to access this task.');
     }
 }

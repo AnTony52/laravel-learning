@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User; // sử dụng mô hình User để tương tác với bảng users trong cơ sở dữ liệu
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -67,13 +68,17 @@ class AuthController extends Controller
                 'message' => 'Unauthenticated',
             ], 401);
         }
-        // Token-based auth: revoke current token
-        if ($user->currentAccessToken()) {
-            $user->currentAccessToken()->delete();
+        // // Token-based auth: revoke current token
+        // if ($user->currentAccessToken()) {
+        //     $user->currentAccessToken()->delete();
 
-            return response()->json([
-                'message' => 'Log out successfully',
-            ]);
+        //     return response()->json([
+        //         'message' => 'Log out successfully',
+        //     ]);
+        $token = $user->currentAccessToken();
+        // Token-based auth: revoke current token when it is a persisted personal access token.
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
         }
 
         // // Session-based auth fallback
